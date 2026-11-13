@@ -35,13 +35,19 @@ public class PromoOrderServiceImpl extends ServiceImpl<PromoOrderMapper, PromoOr
     public PromoOrder createOrder(Long userId, Long activityId) {
         PromoActivity activity = activityService.getById(activityId);
         if (activity == null || activity.getStatus() != 1) {
-            throw new RuntimeException("activity not found or not published");
+            throw new RuntimeException("活动不存在或已下架");
         }
-        if (activity.getRemainingTickets() <= 0) {
-            throw new RuntimeException("activity sold out");
+        // Check: available = remainingTickets + already-paid orders (to prevent oversell)
+        // pending (status=0) orders have NOT yet paid, so they shouldn't reserve stock here
+        long paidCount = count(new LambdaQueryWrapper<PromoOrder>()
+                .eq(PromoOrder::getActivityId, activityId)
+                .eq(PromoOrder::getStatus, 1));
+        long totalBought = paidCount;
+        if (totalBought >= activity.getTotalTickets()) {
+            throw new RuntimeException("活动已售罄");
         }
         if (activity.getEndTime().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("activity has ended");
+            throw new RuntimeException("活动已结束");
         }
 
         String orderNo = "TT" + LocalDateTime.now().format(FMT) + String.format("%06d", seq.incrementAndGet());
@@ -51,11 +57,10 @@ public class PromoOrderServiceImpl extends ServiceImpl<PromoOrderMapper, PromoOr
         order.setActivityId(activityId);
         order.setShopId(activity.getShopId());
         order.setTotalPrice(activity.getPrice());
-        order.setStatus(0);
+        order.setTotalCount(1);
+        order.setStatus(0); // 0=pending, waiting for payment
         save(order);
-
-        activity.setRemainingTickets(activity.getRemainingTickets() - 1);
-        activityService.updateById(activity);
+        // Stock is NOT decremented here — only on successful payment
         return order;
     }
 
@@ -66,8 +71,10 @@ public class PromoOrderServiceImpl extends ServiceImpl<PromoOrderMapper, PromoOr
 
     @Override
     public List<PromoOrder> getUserOrders(Long userId) {
+        // Only show PAID orders to the user
         return list(new LambdaQueryWrapper<PromoOrder>()
                 .eq(PromoOrder::getUserId, userId)
+                .eq(PromoOrder::getStatus, 1)
                 .orderByDesc(PromoOrder::getCreatedAt));
     }
 
@@ -75,6 +82,7 @@ public class PromoOrderServiceImpl extends ServiceImpl<PromoOrderMapper, PromoOr
     public List<PromoOrder> getShopOrders(Long shopId) {
         return list(new LambdaQueryWrapper<PromoOrder>()
                 .eq(PromoOrder::getShopId, shopId)
+                .eq(PromoOrder::getStatus, 1)
                 .orderByDesc(PromoOrder::getCreatedAt));
     }
 
@@ -83,7 +91,16 @@ public class PromoOrderServiceImpl extends ServiceImpl<PromoOrderMapper, PromoOr
     public boolean payOrder(Long orderId) {
         PromoOrder order = getById(orderId);
         if (order == null || order.getStatus() != 0) return false;
-        order.setStatus(1);
+
+        // Decrement stock ONLY when payment succeeds
+        PromoActivity activity = activityService.getById(order.getActivityId());
+        if (activity == null || activity.getRemainingTickets() <= 0) {
+            throw new RuntimeException("库存不足");
+        }
+        activity.setRemainingTickets(activity.getRemainingTickets() - 1);
+        activityService.updateById(activity);
+
+        order.setStatus(1); // 1=paid
         order.setPaidAt(LocalDateTime.now());
         updateById(order);
         return true;

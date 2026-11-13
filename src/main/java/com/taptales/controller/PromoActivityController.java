@@ -28,7 +28,8 @@ public class PromoActivityController {
         Long ownerId = com.taptales.util.UserContext.getUserId();
         Shop shop = shopService.getByOwnerId(ownerId);
         if (shop == null) return Result.fail(401, "shop not found");
-        List<PromoActivity> activities = activityService.getActiveActivitiesByShopId(shop.getId());
+        // use same filter as client: published (status=1), no end-time check
+        List<PromoActivity> activities = activityService.getShopPublishedActivities(shop.getId());
         return Result.ok(activities);
     }
 

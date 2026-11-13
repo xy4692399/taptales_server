@@ -26,14 +26,21 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-# WeChat Mini Program config - replace with your own AppID/AppSecret
+# WeChat Mini Program config
 wechat:
-  app-id: YOUR_WECHAT_APPID
-  app-secret: YOUR_WECHAT_APPSECRET
+  app-id: wx46b9c40eef053412
+  app-secret: 14e6d021d6c0679d098cb98ce127f689
   pay:
-    mch-id: YOUR_MCH_ID
-    api-key: YOUR_API_KEY
-    notify-url: https://your-domain.com/api/pay/notify
+    mch-id: 1001453655
+    api-v3-key: 3CqAD4fLGRE37xCRPQrCL0K6nJJ_56VJ
+    cert-serial-number: 5D2170BEAB874E75F86FB67926042FA0EC6B7F3A
+    private-key-path: D:/codex/taptales/custom/back/cert/apiclient_key.pem
+    public-key-path: D:/codex/taptales/custom/back/cert/pub_key.pem
+    public-key-id: PUB_KEY_ID_0117516803412026103100381740003000
+    # IMPORTANT: must be publicly accessible HTTPS URL.
+    # For local testing run: ngrok http 8083
+    # Then set this to e.g. https://abc123.ngrok.io/api/pay/notify
+    notify-url: https://twiddling-stiffly-quaking.ngrok-free.dev/api/pay/notify
 
 # JWT config
 jwt:

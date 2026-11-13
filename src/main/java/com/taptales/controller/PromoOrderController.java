@@ -2,11 +2,14 @@ package com.taptales.controller;
 
 import com.taptales.entity.PromoOrder;
 import com.taptales.entity.Redemption;
+import com.taptales.entity.User;
 import com.taptales.service.PromoOrderService;
 import com.taptales.service.RedemptionService;
 import com.taptales.service.UserService;
+import com.taptales.service.WxPayService;
 import com.taptales.util.Result;
 import org.springframework.beans.factory.annotation.Autowired;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -20,6 +23,8 @@ public class PromoOrderController {
     private RedemptionService redemptionService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private WxPayService wxPayService;
 
     @PostMapping("/create")
     public Result createOrder(@RequestBody Map<String, Long> params) {
@@ -29,6 +34,25 @@ public class PromoOrderController {
             PromoOrder order = orderService.createOrder(userId, activityId);
             return Result.ok(order);
         } catch (RuntimeException e) {
+            return Result.fail(e.getMessage());
+        }
+    }
+
+    // Returns prepay parameters for wx.requestPayment
+    @GetMapping("/prepay/{orderId}")
+    public Result prepay(@PathVariable Long orderId, HttpServletRequest request) {
+        Long userId = com.taptales.util.UserContext.getUserId();
+        PromoOrder order = orderService.getById(orderId);
+        if (order == null) return Result.fail("order not found");
+        if (!order.getUserId().equals(userId)) return Result.fail("not your order");
+        if (order.getStatus() != 0) return Result.fail("order already paid");
+        try {
+            User user = userService.getById(order.getUserId());
+            if (user == null || user.getOpenid() == null) return Result.fail("wechat openid not found");
+            Map<String, Object> payParams = wxPayService.createJsapiPrepay(
+                    order.getId(), order.getOrderNo(), order.getTotalPrice(), user.getOpenid(), request);
+            return Result.ok(payParams);
+        } catch (Exception e) {
             return Result.fail(e.getMessage());
         }
     }

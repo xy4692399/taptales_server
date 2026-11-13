@@ -1,6 +1,7 @@
 package com.taptales.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.taptales.entity.PromoActivity;
 import com.taptales.entity.PromoActivityDrink;
@@ -24,19 +25,24 @@ public class PromoActivityServiceImpl extends ServiceImpl<PromoActivityMapper, P
     public List<PromoActivity> getActiveActivitiesByShopId(Long shopId) {
         return list(new LambdaQueryWrapper<PromoActivity>()
                 .eq(PromoActivity::getShopId, shopId)
-                .eq(PromoActivity::getStatus, 1)
                 .ge(PromoActivity::getEndTime, LocalDateTime.now())
                 .orderByDesc(PromoActivity::getCreatedAt));
     }
 
     @Override
-    public List<PromoActivity> getPublishedActivities() {
+    public List<PromoActivity> getShopPublishedActivities(Long shopId) {
+        // same filter as client /activity/public/list: only status=1, no end-time check
         return list(new LambdaQueryWrapper<PromoActivity>()
+                .eq(PromoActivity::getShopId, shopId)
                 .eq(PromoActivity::getStatus, 1)
-                .ge(PromoActivity::getStartTime, LocalDateTime.now())
-                .le(PromoActivity::getEndTime, LocalDateTime.now())
-                .gt(PromoActivity::getRemainingTickets, 0)
                 .orderByDesc(PromoActivity::getCreatedAt));
+    }
+
+    @Override
+    public List<PromoActivity> getPublishedActivities() {
+        return baseMapper.selectList(new QueryWrapper<PromoActivity>()
+                .eq("status", 1)
+                .orderByDesc("created_at"));
     }
 
     @Override

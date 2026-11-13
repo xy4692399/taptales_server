@@ -20,6 +20,7 @@
         <java.version>1.8</java.version>
         <mybatis-plus.version>3.5.5</mybatis-plus.version>
         <jwt.version>0.9.1</jwt.version>
+        <wechatpay.version>0.2.17</wechatpay.version>
     </properties>
 
     <dependencies>
@@ -55,6 +56,34 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <!-- WeChat Pay Java SDK -->
+        <dependency>
+            <groupId>com.github.wechatpay-apiv3</groupId>
+            <artifactId>wechatpay-java</artifactId>
+            <version>${wechatpay.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.wechatpay-apiv3</groupId>
+            <artifactId>wechatpay-java-core</artifactId>
+            <version>${wechatpay.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>3.14.9</version>
+        </dependency>
+
+        <!-- BouncyCastle 国密包，支持SM3 -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>1.69</version>
         </dependency>
     </dependencies>
 
