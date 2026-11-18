@@ -29,6 +29,7 @@ jobs:
           source: "target/tap-tales-1.0.0.jar"
           target: "/home/ecs-user/mini-server/tap_tales/"
           overwrite: true
+          debug: true
 
       - name: SSH restart service
         uses: appleboy/ssh-action@master
