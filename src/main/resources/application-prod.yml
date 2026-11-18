@@ -2,13 +2,13 @@
 #  Production Environment
 # ============================================================
 server:
-  port: 8083
+  port: ${SERVER_PORT:8083}
 
 spring:
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/tap_tales?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=Asia/Shanghai
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:}
+    url: jdbc:mysql://127.0.0.1:3306/tap_tales?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=Asia/Shanghai
+    username: root
+    password: "#4692399XYfgy"
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
@@ -34,11 +34,15 @@ mybatis-plus:
 
 # WeChat Mini Program config
 wechat:
-  app-id: ${WECHAT_APPID:}
+  app-id: ${WECHAT_APPID:wx46b9c40eef053412}
   app-secret: ${WECHAT_APPSECRET:}
   pay:
-    mch-id: ${WECHAT_MCH_ID:}
-    api-key: ${WECHAT_API_KEY:}
+    mch-id: ${WECHAT_MCH_ID:1001453655}
+    api-v3-key: ${WECHAT_API_V3_KEY:}
+    cert-serial-number: ${WECHAT_CERT_SERIAL_NUMBER:5D2170BEAB874E75F86FB67926042FA0EC6B7F3A}
+    private-key-path: ${WECHAT_PRIVATE_KEY_PATH:/data/taptales/cert/apiclient_key.pem}
+    public-key-path: ${WECHAT_PUBLIC_KEY_PATH:/data/taptales/cert/pub_key.pem}
+    public-key-id: ${WECHAT_PUBLIC_KEY_ID:PUB_KEY_ID_0117516803412026103100381740003000}
     notify-url: ${WECHAT_NOTIFY_URL:https://your-domain.com/api/pay/notify}
 
 # JWT config

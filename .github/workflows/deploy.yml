@@ -1,0 +1,27 @@
+name: Auto Deploy SpringBoot JDK17
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code4
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ecs-user/mini-server/tap_tales
+            export JAVA_HOME=/usr/lib/jvm/java-17-alibaba-dragonwell-17.0.19.0.20.10-1.alnx4.x86_64
+            export PATH=$JAVA_HOME/bin:$PATH
+            mvn -version
+            git pull origin master 
+            mvn clean package -DskipTests
+            cp target/*.jar tap-tales-1.0.0.jar  
+            sudo systemctl restart tap-tales
