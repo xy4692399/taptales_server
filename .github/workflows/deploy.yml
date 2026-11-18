@@ -1,37 +1,40 @@
-name: tap-tales deploy
+name: Build & Deploy tap-tales
 on:
   push:
     branches: [ master ]
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up JDK17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: maven
 
       - name: Maven package
         run: mvn clean package -DskipTests
 
-      - name: SCP jar to server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          source: "target/tap-tales-1.0.0.jar"
-          target: "/home/ecs-user/mini-server/tap_tales/"
-          overwrite: true
-          debug: true
+      - name: Show jar info
+        run: ls -lh target/tap-tales-1.0.0.jar
 
-      - name: SSH restart service
+      - name: Start ssh-agent & import private key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Native scp upload jar
+        run: |
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+            target/tap-tales-1.0.0.jar \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/ecs-user/mini-server/tap_tales/
+
+      - name: Remote deploy (backup + restart service)
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -40,5 +43,11 @@ jobs:
           port: 22
           script: |
             cd /home/ecs-user/mini-server/tap_tales
-            [ -f tap-tales-1.0.0.jar ] && cp tap-tales-1.0.0.jar tap-tales-1.0.0.jar.bak
-            sudo systemctl restart tap-tales
+            sudo systemctl stop tap-tales || true
+            if [ -f tap-tales-1.0.0.jar ]; then
+              mv tap-tales-1.0.0.jar tap-tales-1.0.0.jar.bak
+            fi
+            ls -lh tap-tales-1.0.0.jar
+            sudo systemctl start tap-tales
+            sleep 2
+            sudo systemctl status tap-tales
