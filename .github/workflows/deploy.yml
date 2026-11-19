@@ -23,5 +23,5 @@ jobs:
             mvn -version
             git pull origin master 
             mvn clean package -DskipTests
-            cp target/*.jar tap-tales-1.0.0.jar  
+            cp target/tap-tales-1.0.0.jar tap-tales-1.0.0.jar  
             sudo systemctl restart tap-tales
