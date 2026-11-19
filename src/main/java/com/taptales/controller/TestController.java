@@ -8,6 +8,6 @@ public class TestController {
 
     @GetMapping("/hello")
     public String hello() {
-        return "Hello from TapTales! We are the watchers on the wall.";
+        return "Hello  We are the watchers on the wall.";
     }
 }
